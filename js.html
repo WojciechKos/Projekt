@@ -117,12 +117,26 @@
         ctx = document.getElementById("game").getContext("2d");
         requestAnimationFrame(drawGame);
         ctx.font = "bold 10pt sans-serif";
+
+        window.addEventListener("keydown", function(e) {
+          if (e.keyCode >= 37 && e.keyCode <= 40) {
+            keysDown[e.keyCode] = true;
+          }
+        });
+        window.addEventListener("keyup", function(e) {
+          if (e.keyCode >= 37 && e.keyCode <= 40) {
+            keysDown[e.keyCode] = false;
+          }
+        });
       };
 
       function drawGame() {
         if (ctx == null) {
           return;
         }
+
+        var currnetFrameTime = Date.now();
+        var timeElapsed = currnetFrameTime - lastFrameTime;
 
         var sec = Math.floor(Date.now() / 1000);
         if (sec != currentSecond) {
@@ -133,6 +147,40 @@
           frameCount++;
         }
 
+        if (!player.processMovement(currnetFrameTime)) {
+          if (
+            keysDown[38] &&
+            player.tileFrom[1] > 0 &&
+            gameMap[toIndex(player.tileFrom[0], player.tileFrom[1] - 1)] == 1
+          ) {
+            player.tileTo[1] -= 1;
+          } else if (
+            keysDown[40] &&
+            player.tileFrom[1] < mapH - 1 &&
+            gameMap[toIndex(player.tileFrom[0], player.tileFrom[1] + 1)] == 1
+          ) {
+            player.tileTo[1] += 1;
+          } else if (
+            keysDown[37] &&
+            player.tileFrom[0] > 0 &&
+            gameMap[toIndex(player.tileFrom[0] - 1, player.tileFrom[1])] == 1
+          ) {
+            player.tileTo[0] -= 1;
+          } else if (
+            keysDown[39] &&
+            player.tileFrom[0] < mapW - 1 &&
+            gameMap[toIndex(player.tileFrom[0] + 1, player.tileFrom[1])] == 1
+          ) {
+            player.tileTo[0] += 1;
+          }
+
+          if (
+            player.tileFrom[0] != player.tileTo[0] ||
+            player.tileFrom[1] != player.tileTo[1]
+          ) {
+            player.timeMoved = currentFrameTime;
+          }
+        }
         for (var y = 0; y < mapH; y++) {
           for (var x = 0; x < mapW; x++) {
             switch (gameMap[y * mapW + x]) {
@@ -212,6 +260,10 @@
 
         return true;
       };
+
+      function toIndex(x, y) {
+        return y * mapW + x;
+      }
     </script>
   </head>
   <body>
